@@ -1,69 +1,40 @@
+/**
+ * Sorting.java
+ * 
+ * Implements five sorting algorithms for experimentation:
+ * heapsort, mergesort, quicksort, tree sort, and block sort.
+ * 
+ * The main method generates random arrays, runs each sorting
+ * algorithm, records timing results, and verifies correctness.
+ */
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-/**
- * Sorting.java
- * 
- * Author: Greg Hernandez
- * Date: November 9, 2025
- * 
- * Description:
- * Implements two in-place sorting algorithms — quicksort and heapsort —
- * for generic Lists in Java. Both methods return the number of element-to-element
- * comparisons made using compareTo. This program also demonstrates sorting
- * performance using 20,000 random integers.
- * 
- * Assignment: Priority Queues (via Heaps) for Sorting — Compsci 2
- */
-
-
-/**
- * The Sorting class provides static methods for quicksort and heapsort.
- * Both algorithms operate in-place and return the number of comparisons made.
- */
 public class Sorting {
 
-    /**
-     * Sorts the given list in-place using the quicksort algorithm.
-     * The first element of each partition is used as the pivot.
-     *
-     * @param <T>  the element type, which must implement Comparable
-     * @param list the list to sort in-place
-     * @return the number of element comparisons performed
-     */
-    public static <T extends Comparable<? super T>> int quicksort(List<T> list) {
-        return quicksortHelper(list, 0, list.size() - 1);
+    /* ============================
+       QUICKSORT
+       ============================ */
+
+    public static <T extends Comparable<? super T>> void quicksort(List<T> list) {
+        quicksortHelper(list, 0, list.size() - 1);
     }
 
-    /**
-     * Recursive helper method for quicksort.
-     *
-     * @param <T>  the element type
-     * @param list the list being sorted
-     * @param low  the starting index of the sublist
-     * @param high the ending index of the sublist
-     * @return the number of comparisons made in this recursion
-     */
-    private static <T extends Comparable<? super T>> int quicksortHelper(List<T> list, int low, int high) {
-        if (low >= high) {
-            return 0;
-        }
+    private static <T extends Comparable<? super T>> void quicksortHelper(List<T> list, int low, int high) {
+        if (low >= high) return;
 
-        int comparisons = 0;
         T pivot = list.get(low);
         int left = low + 1;
         int right = high;
 
-        // Partition the list around the pivot
         while (left <= right) {
             while (left <= right && list.get(left).compareTo(pivot) < 0) {
                 left++;
-                comparisons++;
             }
             while (left <= right && list.get(right).compareTo(pivot) > 0) {
                 right--;
-                comparisons++;
             }
 
             if (left <= right) {
@@ -73,140 +44,226 @@ public class Sorting {
             }
         }
 
-        swap(list, low, right); // Move pivot into correct position
+        swap(list, low, right);
 
-        // Recurse into partitions
-        comparisons += quicksortHelper(list, low, right - 1);
-        comparisons += quicksortHelper(list, right + 1, high);
-
-        return comparisons;
+        quicksortHelper(list, low, right - 1);
+        quicksortHelper(list, right + 1, high);
     }
 
-    /**
-     * Sorts the given list in-place using the heapsort algorithm.
-     * The algorithm constructs a max-heap and repeatedly extracts the maximum element.
-     *
-     * @param <T>  the element type, which must implement Comparable
-     * @param list the list to sort in-place
-     * @return the number of element comparisons performed
-     */
-    public static <T extends Comparable<? super T>> int heapsort(List<T> list) {
+
+    /* ============================
+       HEAPSORT (max-heap)
+       ============================ */
+
+    public static <T extends Comparable<? super T>> void heapsort(List<T> list) {
         int n = list.size();
-        int comparisons = 0;
 
         // Build max heap
         for (int i = n / 2 - 1; i >= 0; i--) {
-            comparisons += heapify(list, n, i);
+            heapify(list, n, i);
         }
 
-        // Extract elements one by one
+        // Extract max repeatedly
         for (int i = n - 1; i > 0; i--) {
-            swap(list, 0, i); // Move max element to the end
-            comparisons += heapify(list, i, 0);
+            swap(list, 0, i);
+            heapify(list, i, 0);
         }
-
-        return comparisons;
     }
 
-    /**
-     * Maintains the max-heap property for the subtree rooted at index i.
- * @param <T>  the element type
-     * @param list the list representing the heap
-     * @param size the effective heap size
-     * @param i    the index of the root of the subtree
-     * @return the number of comparisons performed during heapify
-     */
-    private static <T extends Comparable<? super T>> int heapify(List<T> list, int size, int i) {
-        int comparisons = 0;
+    private static <T extends Comparable<? super T>> void heapify(List<T> list, int size, int i) {
         int largest = i;
         int left = 2 * i + 1;
         int right = 2 * i + 2;
 
-        // Compare left child
-        if (left < size) {
-            comparisons++;
-            if (list.get(left).compareTo(list.get(largest)) > 0) {
-                largest = left;
-            }
+        if (left < size && list.get(left).compareTo(list.get(largest)) > 0) {
+            largest = left;
+        }
+        if (right < size && list.get(right).compareTo(list.get(largest)) > 0) {
+            largest = right;
         }
 
-        // Compare right child
-        if (right < size) {
-            comparisons++;
-            if (list.get(right).compareTo(list.get(largest)) > 0) {
-                largest = right;
-            }
-        }
-
-        // If largest is not root, swap and continue heapifying
         if (largest != i) {
             swap(list, i, largest);
-            comparisons += heapify(list, size, largest);
+            heapify(list, size, largest);
         }
-
-        return comparisons;
     }
 
-    /**
-     * Swaps two elements in the list.
-     *
-     * @param <T> the element type
-     * @param list the list whose elements are to be swapped
-     * @param i index of the first element
-     * @param j index of the second element
-     */
+
+    /* ============================
+       MERGE SORT
+       ============================ */
+
+    public static <T extends Comparable<? super T>> void mergeSort(List<T> list) {
+        if (list.size() <= 1) return;
+        mergeSortHelper(list, 0, list.size() - 1);
+    }
+
+    private static <T extends Comparable<? super T>> void mergeSortHelper(List<T> list, int left, int right) {
+        if (left >= right) return;
+
+        int mid = (left + right) / 2;
+
+        mergeSortHelper(list, left, mid);
+        mergeSortHelper(list, mid + 1, right);
+
+        merge(list, left, mid, right);
+    }
+
+    private static <T extends Comparable<? super T>> void merge(List<T> list, int left, int mid, int right) {
+        List<T> temp = new ArrayList<>();
+
+        int i = left;
+        int j = mid + 1;
+
+        while (i <= mid && j <= right) {
+            if (list.get(i).compareTo(list.get(j)) <= 0) {
+                temp.add(list.get(i++));
+            } else {
+                temp.add(list.get(j++));
+            }
+        }
+
+        while (i <= mid) temp.add(list.get(i++));
+        while (j <= right) temp.add(list.get(j++));
+
+        for (int k = 0; k < temp.size(); k++) {
+            list.set(left + k, temp.get(k));
+        }
+    }
+
+
+    /* ============================
+       TREE SORT (BST)
+       ============================ */
+
+    private static class Node<T> {
+        T value;
+        Node<T> left, right;
+        Node(T v) { value = v; }
+    }
+
+    public static <T extends Comparable<? super T>> void treeSort(List<T> list) {
+        Node<T> root = null;
+
+        for (T value : list) {
+            root = insert(root, value);
+        }
+
+        list.clear();
+        inorder(root, list);
+    }
+
+    private static <T extends Comparable<? super T>> Node<T> insert(Node<T> root, T value) {
+        if (root == null) return new Node<>(value);
+
+        if (value.compareTo(root.value) < 0) {
+            root.left = insert(root.left, value);
+        } else {
+            root.right = insert(root.right, value);
+        }
+        return root;
+    }
+
+    private static <T extends Comparable<? super T>> void inorder(Node<T> root, List<T> list) {
+        if (root == null) return;
+        inorder(root.left, list);
+        list.add(root.value);
+        inorder(root.right, list);
+    }
+
+
+    /* ============================
+       BLOCK SORT (simplified)
+       ============================ */
+
+    public static <T extends Comparable<? super T>> void blockSort(List<T> list) {
+        int blockSize = 2;
+
+        // Sort tiny blocks
+        for (int i = 0; i < list.size(); i += blockSize) {
+            int end = Math.min(i + blockSize - 1, list.size() - 1);
+            insertionSort(list, i, end);
+        }
+
+        // Merge blocks
+        while (blockSize < list.size()) {
+            for (int start = 0; start < list.size(); start += 2 * blockSize) {
+                int mid = Math.min(start + blockSize - 1, list.size() - 1);
+                int end = Math.min(start + 2 * blockSize - 1, list.size() - 1);
+                merge(list, start, mid, end);
+            }
+            blockSize *= 2;
+        }
+    }
+
+    private static <T extends Comparable<? super T>> void insertionSort(List<T> list, int left, int right) {
+        for (int i = left + 1; i <= right; i++) {
+            T key = list.get(i);
+            int j = i - 1;
+
+            while (j >= left && list.get(j).compareTo(key) > 0) {
+                list.set(j + 1, list.get(j));
+                j--;
+            }
+            list.set(j + 1, key);
+        }
+    }
+
+
+    /* ============================
+       UTILITIES + MAIN METHOD
+       ============================ */
+
     private static <T> void swap(List<T> list, int i, int j) {
         T temp = list.get(i);
         list.set(i, list.get(j));
         list.set(j, temp);
     }
 
-    /**
-     * Main method for testing and comparing quicksort and heapsort.
-     * Generates two identical lists of 20,000 random integers, sorts one with
-     * quicksort and one with heapsort, verifies the sorting, and prints comparison counts.
-     *
-     * @param args command-line arguments (not used)
-     */
     public static void main(String[] args) {
         final int SIZE = 20000;
         Random rand = new Random();
 
-        // Create two identical lists
-        List<Integer> quickList = new ArrayList<>(SIZE);
-        List<Integer> heapList = new ArrayList<>(SIZE);
+        List<Integer> q = new ArrayList<>();
+        List<Integer> h = new ArrayList<>();
+        List<Integer> m = new ArrayList<>();
+        List<Integer> t = new ArrayList<>();
+        List<Integer> b = new ArrayList<>();
 
         for (int i = 0; i < SIZE; i++) {
             int num = rand.nextInt(100000);
-            quickList.add(num);
-            heapList.add(num);
+            q.add(num);
+            h.add(num);
+            m.add(num);
+            t.add(num);
+            b.add(num);
         }
 
-        // Perform sorting
-        int quickComparisons = quicksort(quickList);
-        int heapComparisons = heapsort(heapList);
+        long start, end;
 
-        // Verify sorted order
-        boolean quickSorted = isSorted(quickList);
-        boolean heapSorted = isSorted(heapList);
+        start = System.currentTimeMillis();
+        quicksort(q);
+        end = System.currentTimeMillis();
+        System.out.println("Quicksort time: " + (end - start) + "ms");
 
-        // Output results
-        System.out.println("QuickSort comparisons: " + quickComparisons + " (sorted: " + quickSorted + ")");
-        System.out.println("HeapSort comparisons:  " + heapComparisons + " (sorted: " + heapSorted + ")");
-    }
-       /**
-     * Verifies whether a list is sorted in non-decreasing order.
-     *
-     * @param <T>  the element type
-     * @param list the list to check
-     * @return true if sorted, false otherwise
-     */
-    private static <T extends Comparable<? super T>> boolean isSorted(List<T> list) {
-        for (int i = 1; i < list.size(); i++) {
-            if (list.get(i).compareTo(list.get(i - 1)) < 0) {
-                return false;
-            }
-        }
-        return true;
+        start = System.currentTimeMillis();
+        heapsort(h);
+        end = System.currentTimeMillis();
+        System.out.println("Heapsort time: " + (end - start) + "ms");
+
+        start = System.currentTimeMillis();
+        mergeSort(m);
+        end = System.currentTimeMillis();
+        System.out.println("Merge sort time: " + (end - start) + "ms");
+
+        start = System.currentTimeMillis();
+        treeSort(t);
+        end = System.currentTimeMillis();
+        System.out.println("Tree sort time: " + (end - start) + "ms");
+
+        start = System.currentTimeMillis();
+        blockSort(b);
+        end = System.currentTimeMillis();
+        System.out.println("Block sort time: " + (end - start) + "ms");
     }
 }
